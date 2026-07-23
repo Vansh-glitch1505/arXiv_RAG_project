@@ -3,40 +3,72 @@ import json
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from langchain.retrievers.multi_query import MultiQueryRetriever
 
 load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CHROMA_DIR = os.path.join(BASE_DIR, "data", "chroma_db")
 
-RETRIEVAL_K = 15     # over-retrieve on purpose, rerank narrows this down
-FINAL_K = 4           # what actually goes into the final prompt
+RETRIEVAL_K = 15
+FINAL_K = 4
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
 
 
 # ---------- Step 1: Load the persisted vector store ----------
 def load_vectorstore():
-    """Load the Chroma store that embed.py already built and saved to disk."""
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    vectorstore = Chroma(
-        persist_directory=CHROMA_DIR,
-        embedding_function=embeddings
-    )
-    return vectorstore
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+    return Chroma(persist_directory=CHROMA_DIR, embedding_function=embeddings)
 
 
-# ---------- Step 2: Retriever with query expansion ----------
-def get_retriever(vectorstore):
-    """Base similarity retriever wrapped with LangChain's MultiQueryRetriever,
-    which generates multiple phrasings of the question and merges retrieved results."""
-    base_retriever = vectorstore.as_retriever(search_kwargs={"k": RETRIEVAL_K})
-    retriever = MultiQueryRetriever.from_llm(retriever=base_retriever, llm=llm)
-    return retriever
+# ---------- Step 2: Hand-rolled query expansion (replaces MultiQueryRetriever) ----------
+EXPANSION_PROMPT = """Generate 3 different versions of the question below, each phrased
+differently, to help retrieve relevant documents from a vector database. Vary the wording
+and phrasing, but keep the same underlying intent.
+
+Original question: {question}
+
+Return ONLY a JSON array of 3 strings, no markdown fences, no commentary.
+Example: ["version 1", "version 2", "version 3"]
+"""
+
+def expand_query(query: str) -> list[str]:
+    """Generate multiple phrasings of the question — hand-rolled replacement
+    for LangChain's MultiQueryRetriever, since it's unavailable in this LangChain version."""
+    response = llm.invoke(EXPANSION_PROMPT.format(question=query))
+    raw = response.content.strip()
+
+    if raw.startswith("```"):
+        raw = raw.split("```")[1].replace("json", "", 1).strip()
+
+    try:
+        variations = json.loads(raw)
+    except json.JSONDecodeError:
+        print("Warning: query expansion parsing failed, using original query only")
+        variations = []
+
+    return [query] + variations   # always include the original query too
 
 
-# ---------- Step 3: Hand-rolled reranker (your differentiator) ----------
+def multi_query_retrieve(vectorstore, query: str, k: int = RETRIEVAL_K):
+    """Run retrieval across all query variations, then dedupe by content."""
+    queries = expand_query(query)
+    print(f"Expanded into {len(queries)} query variations")
+
+    all_docs = []
+    seen_content = set()
+
+    for q in queries:
+        docs = vectorstore.similarity_search(q, k=k)
+        for doc in docs:
+            if doc.page_content not in seen_content:
+                seen_content.add(doc.page_content)
+                all_docs.append(doc)
+
+    return all_docs
+
+
+# ---------- Step 3: Hand-rolled reranker ----------
 RERANK_PROMPT = """You are ranking retrieved paper excerpts by relevance to a question.
 
 Question: {question}
@@ -49,8 +81,6 @@ Example: [3, 1, 4, 2]
 """
 
 def rerank(query: str, docs: list) -> list:
-    """LLM-based reranking — same approach as Day 5's rerank(), adapted
-    to work on LangChain Document objects instead of plain strings."""
     if not docs:
         return []
 
@@ -90,10 +120,9 @@ Answer:
 
 def answer_question(query: str):
     vectorstore = load_vectorstore()
-    retriever = get_retriever(vectorstore)
 
-    retrieved_docs = retriever.invoke(query)
-    print(f"Retrieved {len(retrieved_docs)} chunks (pre-rerank)")
+    retrieved_docs = multi_query_retrieve(vectorstore, query)
+    print(f"Retrieved {len(retrieved_docs)} unique chunks (pre-rerank)")
 
     reranked_docs = rerank(query, retrieved_docs)
     print(f"Reranked down to {len(reranked_docs)} chunks")
@@ -104,11 +133,11 @@ def answer_question(query: str):
     )
 
     response = llm.invoke(ANSWER_PROMPT.format(question=query, context=context))
-    return response.content
+    return response.content, reranked_docs
 
 
 if __name__ == "__main__":
-    query = "What is repetitive copying in long-context reasoning?"
-    answer = answer_question(query)
+    query = "What happens when reasoning is enabled at inference but the model wasn't trained with reasoning?"
+    answer, docs = answer_question(query)
     print("\n--- Answer ---")
     print(answer)

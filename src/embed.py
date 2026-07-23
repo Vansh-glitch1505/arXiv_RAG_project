@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -19,10 +20,10 @@ def load_chunks() -> list[dict]:
 
 
 def build_vectorstore(all_chunks: list[dict]):
-    """Convert chunks into LangChain Documents, embed them, store in Chroma."""
+    """Convert chunks into LangChain Documents, embed them in batches, store in Chroma."""
     docs = [
         Document(
-            page_content=c["original_text"],   # what actually gets embedded + retrieved
+            page_content=c["original_text"],
             metadata={
                 "paper_id": c["paper_id"],
                 "paper_title": c["paper_title"],
@@ -33,13 +34,27 @@ def build_vectorstore(all_chunks: list[dict]):
         for c in all_chunks
     ]
 
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
-    vectorstore = Chroma.from_documents(
-        documents=docs,
-        embedding=embeddings,
-        persist_directory=CHROMA_DIR
-    )
+    BATCH_SIZE = 50
+    vectorstore = None
+
+    for i in range(0, len(docs), BATCH_SIZE):
+        batch = docs[i:i + BATCH_SIZE]
+        print(f"Embedding batch {i // BATCH_SIZE + 1} ({len(batch)} chunks)...")
+
+        if vectorstore is None:
+            vectorstore = Chroma.from_documents(
+                documents=batch,
+                embedding=embeddings,
+                persist_directory=CHROMA_DIR
+            )
+        else:
+            vectorstore.add_documents(batch)
+
+        if i + BATCH_SIZE < len(docs):
+            print("Waiting 60s to respect free-tier rate limit...")
+            time.sleep(60)
 
     print(f"Stored {len(docs)} chunks in Chroma at {CHROMA_DIR}")
     return vectorstore

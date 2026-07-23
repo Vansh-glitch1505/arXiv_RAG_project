@@ -1,6 +1,7 @@
 import arxiv
 import requests
 import os
+import time
 import json
 from pypdf import PdfReader
 from dotenv import load_dotenv
@@ -128,6 +129,7 @@ def chunk_paper(paper_text: str, paper_id: str, paper_title: str) -> list[dict]:
             c["paper_id"] = paper_id
             c["paper_title"] = paper_title
         all_chunks.extend(chunks)
+        time.sleep(2)
 
     return all_chunks
 
@@ -150,10 +152,12 @@ def load_existing_papers() -> list[dict]:
 # ---------- Run ----------
 if __name__ == "__main__":
     papers = load_existing_papers()
-    papers = papers[:4]
+    papers = papers[:3]
     print(f"\nLoaded {len(papers)} existing papers\n")
 
     all_chunks = []
+    chunks_path = os.path.join(BASE_DIR, "data", "chunks.json")
+
     for paper in papers:
         print(f"Processing: {paper['title']}")
         text = extract_text(paper["pdf_path"])
@@ -161,9 +165,8 @@ if __name__ == "__main__":
         all_chunks.extend(chunks)
         print(f"  → {len(chunks)} chunks\n")
 
-    print(f"\nTotal chunks across all papers: {len(all_chunks)}")
+        with open(chunks_path, "w", encoding="utf-8") as f:
+            json.dump(all_chunks, f, indent=2)   # save after every paper
 
-    chunks_path = os.path.join(BASE_DIR, "data", "chunks.json")
-    with open(chunks_path, "w", encoding="utf-8") as f:
-        json.dump(all_chunks, f, indent=2)
+    print(f"\nTotal chunks across all papers: {len(all_chunks)}")
     print(f"Saved chunks to {chunks_path}")

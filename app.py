@@ -1,28 +1,20 @@
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
+
 import gradio as gr
-from src.answer import answer_question, load_vectorstore, get_retriever, rerank
+from answer import answer_question
 
 def respond(message, history):
     """Gradio ChatInterface callback — takes the user message, returns the answer
     with source papers listed at the end."""
-    vectorstore = load_vectorstore()
-    retriever = get_retriever(vectorstore)
+    answer, docs = answer_question(message)
 
-    retrieved_docs = retriever.invoke(message)
-    reranked_docs = rerank(message, retrieved_docs)
-
-    context = "\n\n".join(
-        f"[{doc.metadata.get('paper_title', 'Unknown')}]\n{doc.page_content}"
-        for doc in reranked_docs
-    )
-
-    from src.answer import llm, ANSWER_PROMPT
-    response = llm.invoke(ANSWER_PROMPT.format(question=message, context=context))
-
-    # Build a "Sources" footer from the reranked chunks' metadata
-    sources = list({doc.metadata.get("paper_title", "Unknown") for doc in reranked_docs})
+    sources = list({doc.metadata.get("paper_title", "Unknown") for doc in docs})
     sources_text = "\n\n**Sources:**\n" + "\n".join(f"- {s}" for s in sources)
 
-    return response.content + sources_text
+    return answer + sources_text
 
 
 demo = gr.ChatInterface(
@@ -30,8 +22,8 @@ demo = gr.ChatInterface(
     title="arXiv Research Assistant",
     description="Ask questions about recent NLP/AI research papers. Answers are grounded in retrieved paper excerpts, with sources cited below each response.",
     examples=[
-        "What is repetitive copying in long-context reasoning?",
-        "What methods reduce hallucination in RAG systems?",
+        "What did the paper find about reasoning traces and translation quality?",
+        "What happens when reasoning is enabled at inference but the model wasn't trained with reasoning?",
     ],
 )
 
