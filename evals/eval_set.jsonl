@@ -1,0 +1,15 @@
+{"id": "q1", "question": "What COMET score did Qwen3.5 4B achieve when trained without thinking but with thinking enabled at inference?", "expected_paper_id": "2607.19226v1", "expected_facts": ["81.05"]}
+{"id": "q2", "question": "What happens to inference cost when reasoning is enabled at inference without reasoning-based training?", "expected_paper_id": "2607.19226v1", "expected_facts": ["triples"]}
+{"id": "q3", "question": "Which model and configuration achieved the best COMET score in the reasoning cost-quality tradeoff paper?", "expected_paper_id": "2607.19226v1", "expected_facts": ["82.50", "9B"]}
+{"id": "q4", "question": "What optimized libraries were used for training and inference in the legal translation RLVR experiments?", "expected_paper_id": "2607.19226v1", "expected_facts": ["unsloth", "vLLM"]}
+{"id": "q5", "question": "How large was the SwiLTra-Bench test set used for evaluation?", "expected_paper_id": "2607.19226v1", "expected_facts": ["18.1"]}
+{"id": "q6", "question": "What was the standardized hourly GPU cost used to estimate training and inference costs?", "expected_paper_id": "2607.19226v1", "expected_facts": ["0.79"]}
+{"id": "q7", "question": "What was the earlier study's Cliff's delta estimate for the monotonicity boundary in ChaosNLI?", "expected_paper_id": "2607.19231v1", "expected_facts": ["-0.284", "0.284"]}
+{"id": "q8", "question": "What was the preregistered smallest effect size of interest (SESOI) in the NLI monotonicity replication study?", "expected_paper_id": "2607.19231v1", "expected_facts": ["0.10"]}
+{"id": "q9", "question": "What was the Cliff's delta and p-value for the MNLI matched primary contrast in the monotonicity replication?", "expected_paper_id": "2607.19231v1", "expected_facts": ["0.045"]}
+{"id": "q10", "question": "What four-class agreement rate did the manual audit reach in the monotonicity tagger validation?", "expected_paper_id": "2607.19231v1", "expected_facts": ["0.875"]}
+{"id": "q11", "question": "What are the three hierarchical task levels in the MeetingToM benchmark?", "expected_paper_id": "2607.19235v1", "expected_facts": ["subject", "dyadic", "group"]}
+{"id": "q12", "question": "What meeting corpus is the MeetingToM benchmark built on?", "expected_paper_id": "2607.19235v1", "expected_facts": ["AMI"]}
+{"id": "q13", "question": "How many clips and meeting sessions does MeetingToM contain?", "expected_paper_id": "2607.19235v1", "expected_facts": ["1,800", "60"]}
+{"id": "q14", "question": "What is pseudo-consensus in the context of the MeetingToM benchmark?", "expected_paper_id": "2607.19235v1", "expected_facts": ["dissent"]}
+{"id": "q15", "question": "Which proprietary model achieved the strongest group-level results on Task 3.1 and Task 3.2 in MeetingToM?", "expected_paper_id": "2607.19235v1", "expected_facts": ["GPT-5"]}
