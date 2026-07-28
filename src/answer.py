@@ -9,15 +9,15 @@ load_dotenv()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CHROMA_DIR = os.path.join(BASE_DIR, "data", "chroma_db")
 
-RETRIEVAL_K = 15
-FINAL_K = 4
+RETRIEVAL_K = 15 #15 becuase vector similarity isn't perfect and the best chunk would be in these 15 chunks
+FINAL_K = 4 #Top 4 chunks
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
 
 
 # ---------- Step 1: Load the persisted vector store ----------
 def load_vectorstore():
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001") 
     return Chroma(persist_directory=CHROMA_DIR, embedding_function=embeddings)
 
 

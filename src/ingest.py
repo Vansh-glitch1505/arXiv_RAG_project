@@ -59,7 +59,7 @@ def fetch_papers(max_results: int = 10):
 # ---------- Step 2: Extract text from PDF ----------
 def extract_text(pdf_path: str) -> str:
     """Pull raw text out of a downloaded PDF."""
-    reader = PdfReader(pdf_path)
+    reader = PdfReader(pdf_path) # Loads PDF
     text = ""
     for page in reader.pages:
         text += page.extract_text() + "\n"
@@ -129,7 +129,7 @@ def chunk_paper(paper_text: str, paper_id: str, paper_title: str) -> list[dict]:
             c["paper_id"] = paper_id
             c["paper_title"] = paper_title
         all_chunks.extend(chunks)
-        time.sleep(2)
+        time.sleep(2) #Avoids API abuse
 
     return all_chunks
 
@@ -165,7 +165,7 @@ if __name__ == "__main__":
         all_chunks.extend(chunks)
         print(f"  → {len(chunks)} chunks\n")
 
-        with open(chunks_path, "w", encoding="utf-8") as f:
+        with open(chunks_path, "w", encoding="utf-8") as f: # utf helps encoding in all languages
             json.dump(all_chunks, f, indent=2)   # save after every paper
 
     print(f"\nTotal chunks across all papers: {len(all_chunks)}")
