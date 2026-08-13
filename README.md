@@ -123,3 +123,7 @@ The project includes a 15-question evaluation set and measures:
 **Vansh Rotkar**
 
 [GitHub](https://github.com/Vansh-glitch1505)
+
+
+Architecture
+https://raw.githubusercontent.com/Vansh-glitch1505/arXiv_RAG_project/fb2d9fd3b0124206f9a5e15258a40c98ab818387/workflow.png
