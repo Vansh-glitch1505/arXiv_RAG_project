@@ -29,6 +29,7 @@ It now includes a lightweight **FastAPI backend** and **React/Vite frontend** fo
 ---
 
 ## 🏗️ Architecture
+![](https://github.com/Vansh-glitch1505/arXiv_RAG_project/blob/main/workflow_RAG.png?raw=true)
 
 The frontend does **not** implement a second retrieval pipeline. It communicates with the existing RAG system through the FastAPI `/ask` endpoint.
 
