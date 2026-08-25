@@ -11,7 +11,7 @@ It now includes a lightweight **FastAPI backend** and **React/Vite frontend** fo
 ## ✨ Features
 
 * 📄 Extracts and processes research papers from PDFs
-* 🧩 **LLM-based semantic chunking** to preserve meaningful sections
+* 🧩 **LLM-based semantic chunking** to preserve meaningful sections 
 * 🧠 **Gemini embeddings** for semantic search
 * 🗃️ **ChromaDB** for persistent vector storage
 * 🔀 **Query expansion** to improve retrieval coverage
